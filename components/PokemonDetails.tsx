@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { PokemonDetail, PokemonSpecies } from "../types/pokemon";
 
 interface PokemonDetailsProps {
@@ -182,17 +183,27 @@ export function PokemonDetails({
   const flavorText = getFlavorText();
 
   return (
-    <div className="w-full flex flex-col text-slate-100 font-mono">
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+      key={data.id}
+      className="w-full flex flex-col text-slate-100 font-mono"
+    >
       <div className="relative w-full h-48 shrink-0 border-b border-slate-800 bg-[url('/battle-bg.png')] bg-cover bg-center bg-no-repeat bg-sky-900 rounded-lg shadow-inner overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
-          <img
+          <motion.img
+            key={imageUrl}
+            initial={{ scale: 0.5, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: "spring", bounce: 0.5, duration: 0.8 }}
             src={imageUrl}
             alt={`${data.name} ${isShiny ? "Shiny" : ""}`}
-            className={`h-44 w-44 object-contain drop-shadow-2xl z-10 transition-all duration-300 ${
+            className={`h-44 w-44 object-contain z-10 transition-all duration-300 ${
               isShiny
                 ? "scale-105 brightness-110 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"
-                : ""
+                : "drop-shadow-2xl"
             }`}
           />
         </div>
@@ -213,9 +224,10 @@ export function PokemonDetails({
               <h2 className="text-3xl font-black capitalize text-white drop-shadow-md">
                 {data.name}
               </h2>
-              <button
+              <motion.button
+                whileTap={{ scale: 0.9 }}
                 onClick={playCry}
-                className="w-7 h-7 flex items-center justify-center bg-sky-500 rounded-full border border-sky-300 shadow-[0_2px_0_#0284c7] active:translate-y-[2px] active:shadow-none transition-all hover:bg-sky-400 group ml-1"
+                className="w-7 h-7 flex items-center justify-center bg-sky-500 rounded-full border border-sky-300 shadow-[0_2px_0_#0284c7] hover:bg-sky-400 group ml-1"
                 title="Play Cry"
               >
                 <svg
@@ -225,10 +237,11 @@ export function PokemonDetails({
                 >
                   <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
                 </svg>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setIsShiny(!isShiny)}
-                className={`w-7 h-7 flex items-center justify-center rounded-full border shadow-[0_2px_0_rgba(0,0,0,0.3)] active:translate-y-[2px] active:shadow-none transition-all group ${
+                className={`w-7 h-7 flex items-center justify-center rounded-full border shadow-[0_2px_0_rgba(0,0,0,0.3)] transition-all group ${
                   isShiny
                     ? "bg-yellow-400 border-yellow-200 shadow-[0_2px_0_#ca8a04] hover:bg-yellow-300"
                     : "bg-slate-700 border-slate-500 hover:bg-slate-600"
@@ -244,21 +257,28 @@ export function PokemonDetails({
                 >
                   <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                 </svg>
-              </button>
-              {isCaught && (
-                <div className="ml-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 border border-red-500/50 rounded-md shadow-[inset_0_0_8px_rgba(239,68,68,0.3)]">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-3.5 h-3.5 text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]"
+              </motion.button>
+              <AnimatePresence>
+                {isCaught && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    className="ml-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 border border-red-500/50 rounded-md shadow-[inset_0_0_8px_rgba(239,68,68,0.3)]"
                   >
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 2c4.08 0 7.45 3.05 7.94 7h-4.06c-.44-1.73-2.01-3-3.88-3s-3.44 1.27-3.88 3H4.06C4.55 7.05 7.92 4 12 4zm0 16c-4.08 0-7.45-3.05-7.94-7h4.06c.44 1.73 2.01 3 3.88 3s3.44-1.27 3.88-3h4.06c-.49 3.95-3.86 7-7.94 7zm0-10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                  </svg>
-                  <span className="text-[9px] font-black text-red-400 tracking-wider uppercase">
-                    Caught
-                  </span>
-                </div>
-              )}
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-3.5 h-3.5 text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]"
+                    >
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 2c4.08 0 7.45 3.05 7.94 7h-4.06c-.44-1.73-2.01-3-3.88-3s-3.44 1.27-3.88 3H4.06C4.55 7.05 7.92 4 12 4zm0 16c-4.08 0-7.45-3.05-7.94-7h4.06c.44 1.73 2.01 3 3.88 3s3.44-1.27 3.88-3h4.06c-.49 3.95-3.86 7-7.94 7zm0-10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                    </svg>
+                    <span className="text-[9px] font-black text-red-400 tracking-wider uppercase">
+                      Caught
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <p className="text-slate-400 font-bold text-sm mt-1">
               NO. {String(data.id).padStart(3, "0")}
@@ -266,17 +286,19 @@ export function PokemonDetails({
           </div>
           <div className="flex gap-1.5 flex-wrap justify-end">
             {data.types.map((t) => (
-              <div
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 key={t.type.name}
                 onClick={() => applyFilter("type", t.type.name)}
-                className="cursor-pointer hover:scale-105 hover:shadow-[0_0_10px_rgba(255,255,255,0.3)] px-2.5 py-0.5 rounded-sm border border-black/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(0,0,0,0.3)] flex items-center gap-1 text-[11px] font-black uppercase text-white transition-all"
+                className="cursor-pointer shadow-[0_0_10px_rgba(255,255,255,0.1)] px-2.5 py-0.5 rounded-sm border border-black/50 flex items-center gap-1 text-[11px] font-black uppercase text-white"
                 style={{
                   backgroundColor: TYPE_COLORS[t.type.name] || "#475569",
                 }}
                 title={`Filtrar por tipo ${t.type.name}`}
               >
                 <TypeIcon type={t.type.name} /> {t.type.name}
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -392,7 +414,7 @@ export function PokemonDetails({
             BASE STATS
           </h3>
           <div className="flex flex-col gap-3">
-            {data.stats.map((s) => (
+            {data.stats.map((s, index) => (
               <div key={s.stat.name} className="flex items-center text-xs">
                 <span className="w-14 text-slate-400 font-bold uppercase">
                   {s.stat.name.replace("special-", "sp.")}
@@ -401,10 +423,16 @@ export function PokemonDetails({
                   {s.base_stat}
                 </span>
                 <div className="flex-grow h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800 shadow-inner">
-                  <div
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(s.base_stat / 255) * 100}%` }}
+                    transition={{
+                      duration: 0.8,
+                      ease: "easeOut",
+                      delay: index * 0.1,
+                    }}
                     className="h-full bg-gradient-to-r from-sky-600 to-sky-400 rounded-full"
-                    style={{ width: `${(s.base_stat / 255) * 100}%` }}
-                  ></div>
+                  />
                 </div>
               </div>
             ))}
@@ -420,10 +448,12 @@ export function PokemonDetails({
               {data.game_indices.map((g) => {
                 const baseColor = VERSION_COLORS[g.version.name] || "#94a3b8";
                 return (
-                  <div
+                  <motion.div
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    whileTap={{ scale: 0.95 }}
                     key={g.version.name}
                     onClick={() => applyFilter("game", g.version.name)}
-                    className="cursor-pointer w-28 h-40 shrink-0 rounded-t-xl rounded-b shadow-[4px_4px_10px_rgba(0,0,0,0.6)] flex flex-col relative overflow-hidden group border-t-[3px] border-l-[3px] border-white/30 border-r-[4px] border-b-[4px] border-black/40 transition-transform hover:-translate-y-2 hover:z-10"
+                    className="cursor-pointer w-28 h-40 shrink-0 rounded-t-xl rounded-b shadow-[4px_4px_10px_rgba(0,0,0,0.6)] flex flex-col relative overflow-hidden group border-t-[3px] border-l-[3px] border-white/30 border-r-[4px] border-b-[4px] border-black/40 z-10"
                     style={{ backgroundColor: baseColor }}
                     title={`Filtrar jogos da geração ${g.version.name}`}
                   >
@@ -461,13 +491,13 @@ export function PokemonDetails({
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

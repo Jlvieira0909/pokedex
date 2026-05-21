@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { PokemonCard } from "./PokemonCard";
 
 interface PokemonSearchListProps {
@@ -299,12 +300,17 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
 
   return (
     <div className="flex flex-col w-full relative">
-      {isFilterOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsFilterOpen(false)}
-        ></div>
-      )}
+      <AnimatePresence>
+        {isFilterOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40"
+            onClick={() => setIsFilterOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       <div className="sticky top-0 z-50 pt-1 pb-2 pointer-events-none">
         <div className="relative pointer-events-auto flex flex-col gap-2">
@@ -327,7 +333,8 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
               </svg>
             </div>
 
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowCaughtOnly(!showCaughtOnly)}
               className={`shrink-0 px-4 rounded-xl border flex items-center justify-center transition-all ${
                 showCaughtOnly
@@ -338,187 +345,218 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 2c4.08 0 7.45 3.05 7.94 7h-4.06c-.44-1.73-2.01-3-3.88-3s-3.44 1.27-3.88 3H4.06C4.55 7.05 7.92 4 12 4zm0 16c-4.08 0-7.45-3.05-7.94-7h4.06c.44 1.73 2.01 3 3.88 3s3.44-1.27 3.88-3h4.06c-.49 3.95-3.86 7-7.94 7zm0-10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
               </svg>
-            </button>
+            </motion.button>
           </div>
 
-          {(typeFilters.length > 0 ||
-            regionFilters.length > 0 ||
-            gameFilters.length > 0) && (
-            <div className="flex gap-2 px-1 flex-wrap font-mono text-[10px]">
-              {typeFilters.map((t) => (
-                <button
-                  key={`active-type-${t}`}
-                  onClick={() => toggleFilter(setTypeFilters, t)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-600 text-white hover:bg-red-500 hover:border-red-400 transition-colors shadow-sm"
-                >
-                  <span
-                    className="uppercase font-black"
-                    style={{ color: TYPE_COLORS[t] }}
+          <AnimatePresence>
+            {(typeFilters.length > 0 ||
+              regionFilters.length > 0 ||
+              gameFilters.length > 0) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex gap-2 px-1 flex-wrap font-mono text-[10px]"
+              >
+                {typeFilters.map((t) => (
+                  <motion.button
+                    key={`active-type-${t}`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    onClick={() => toggleFilter(setTypeFilters, t)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-600 text-white hover:bg-red-500 hover:border-red-400 transition-colors shadow-sm"
                   >
-                    {t}
-                  </span>
-                  <span className="text-white/50">✕</span>
-                </button>
-              ))}
-              {regionFilters.map((r) => (
-                <button
-                  key={`active-region-${r}`}
-                  onClick={() => toggleFilter(setRegionFilters, r)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-slate-800 border-l-2 border-sky-400 text-white hover:bg-red-500 hover:border-red-400 hover:border-l-red-200 transition-colors shadow-sm"
-                >
-                  <span className="uppercase font-bold text-slate-200">
-                    {r}
-                  </span>
-                  <span className="text-white/50">✕</span>
-                </button>
-              ))}
-              {gameFilters.map((g) => (
-                <button
-                  key={`active-game-${g}`}
-                  onClick={() => toggleFilter(setGameFilters, g)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-white hover:bg-red-500 hover:border-red-400 transition-colors shadow-sm"
-                >
-                  <span
-                    className="uppercase font-bold"
-                    style={{ color: VERSION_COLORS[g] || "#4ade80" }}
+                    <span
+                      className="uppercase font-black"
+                      style={{ color: TYPE_COLORS[t] }}
+                    >
+                      {t}
+                    </span>
+                    <span className="text-white/50">✕</span>
+                  </motion.button>
+                ))}
+                {regionFilters.map((r) => (
+                  <motion.button
+                    key={`active-region-${r}`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    onClick={() => toggleFilter(setRegionFilters, r)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-slate-800 border-l-2 border-sky-400 text-white hover:bg-red-500 hover:border-red-400 hover:border-l-red-200 transition-colors shadow-sm"
                   >
-                    {g.replace(/-/g, " ")}
-                  </span>
-                  <span className="text-white/50">✕</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {isFilterOpen && (
-            <div className="absolute top-[52px] left-0 w-full bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-4 flex flex-col gap-5 font-mono z-50 max-h-80 overflow-y-auto custom-scrollbar">
-              <div>
-                <h3 className="text-slate-400 text-[10px] font-black tracking-widest mb-3 border-b border-slate-800 pb-1 flex items-center justify-between">
-                  TIPOS
-                  {typeFilters.length > 0 && (
-                    <span className="text-sky-400">
-                      {typeFilters.length} SELECTED
+                    <span className="uppercase font-bold text-slate-200">
+                      {r}
                     </span>
-                  )}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {Object.keys(TYPE_COLORS).map((type) => {
-                    const isActive = typeFilters.includes(type);
-                    return (
-                      <button
-                        key={type}
-                        onClick={() => toggleFilter(setTypeFilters, type)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] uppercase font-black transition-all hover:scale-105 active:scale-95 ${
-                          isActive
-                            ? "shadow-[0_0_10px_rgba(255,255,255,0.4)] text-white"
-                            : "text-white/80 opacity-60 hover:opacity-100"
-                        }`}
-                        style={{
-                          backgroundColor: isActive
-                            ? TYPE_COLORS[type]
-                            : "transparent",
-                          borderColor: TYPE_COLORS[type],
-                          color: isActive ? "#fff" : TYPE_COLORS[type],
-                        }}
-                      >
-                        <TypeIcon type={type} />
-                        {type}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-slate-400 text-[10px] font-black tracking-widest mb-3 border-b border-slate-800 pb-1 flex items-center justify-between">
-                  REGIÕES
-                  {regionFilters.length > 0 && (
-                    <span className="text-sky-400">
-                      {regionFilters.length} SELECTED
+                    <span className="text-white/50">✕</span>
+                  </motion.button>
+                ))}
+                {gameFilters.map((g) => (
+                  <motion.button
+                    key={`active-game-${g}`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    onClick={() => toggleFilter(setGameFilters, g)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-white hover:bg-red-500 hover:border-red-400 transition-colors shadow-sm"
+                  >
+                    <span
+                      className="uppercase font-bold"
+                      style={{ color: VERSION_COLORS[g] || "#4ade80" }}
+                    >
+                      {g.replace(/-/g, " ")}
                     </span>
-                  )}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {Object.keys(REGIONS).map((region) => {
-                    const isActive = regionFilters.includes(region);
-                    return (
-                      <button
-                        key={region}
-                        onClick={() => toggleFilter(setRegionFilters, region)}
-                        className={`px-3 py-1.5 rounded-sm border-l-4 text-[10px] uppercase font-bold shadow-sm transition-all active:scale-95 ${
-                          isActive
-                            ? "bg-sky-600 border-sky-300 text-white shadow-[0_0_10px_rgba(2,132,199,0.5)]"
-                            : "bg-slate-800 border-slate-500 text-slate-400 hover:bg-slate-700"
-                        }`}
-                      >
-                        {region}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+                    <span className="text-white/50">✕</span>
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-              <div>
-                <h3 className="text-slate-400 text-[10px] font-black tracking-widest mb-3 border-b border-slate-800 pb-1 flex items-center justify-between">
-                  JOGOS CLÁSSICOS
-                  {gameFilters.length > 0 && (
-                    <span className="text-sky-400">
-                      {gameFilters.length} SELECTED
-                    </span>
-                  )}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "red",
-                    "blue",
-                    "yellow",
-                    "gold",
-                    "silver",
-                    "crystal",
-                    "ruby",
-                    "sapphire",
-                    "emerald",
-                    "diamond",
-                    "pearl",
-                  ].map((game) => {
-                    const isActive = gameFilters.includes(game);
-                    const baseColor = VERSION_COLORS[game] || "#94a3b8";
-                    return (
-                      <button
-                        key={game}
-                        onClick={() => toggleFilter(setGameFilters, game)}
-                        className={`px-3 py-1.5 rounded-t-md rounded-b-sm border-t border-l border-b-2 border-r-2 text-[10px] uppercase font-black transition-all hover:-translate-y-0.5 active:scale-95 ${
-                          isActive
-                            ? "text-white border-white/40 shadow-[0_4px_10px_rgba(0,0,0,0.6)]"
-                            : "text-white/60 border-black/40 bg-slate-800 hover:text-white"
-                        }`}
-                        style={{
-                          backgroundColor: isActive ? baseColor : undefined,
-                        }}
-                      >
-                        {game}
-                      </button>
-                    );
-                  })}
+          <AnimatePresence>
+            {isFilterOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -15, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                transition={{ type: "spring", bounce: 0.3 }}
+                className="absolute top-[52px] left-0 w-full bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-4 flex flex-col gap-5 font-mono z-50 max-h-80 overflow-y-auto custom-scrollbar"
+              >
+                <div>
+                  <h3 className="text-slate-400 text-[10px] font-black tracking-widest mb-3 border-b border-slate-800 pb-1 flex items-center justify-between">
+                    TIPOS
+                    {typeFilters.length > 0 && (
+                      <span className="text-sky-400">
+                        {typeFilters.length} SELECTED
+                      </span>
+                    )}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.keys(TYPE_COLORS).map((type) => {
+                      const isActive = typeFilters.includes(type);
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => toggleFilter(setTypeFilters, type)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] uppercase font-black transition-all hover:scale-105 active:scale-95 ${
+                            isActive
+                              ? "shadow-[0_0_10px_rgba(255,255,255,0.4)] text-white"
+                              : "text-white/80 opacity-60 hover:opacity-100"
+                          }`}
+                          style={{
+                            backgroundColor: isActive
+                              ? TYPE_COLORS[type]
+                              : "transparent",
+                            borderColor: TYPE_COLORS[type],
+                            color: isActive ? "#fff" : TYPE_COLORS[type],
+                          }}
+                        >
+                          <TypeIcon type={type} />
+                          {type}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+
+                <div>
+                  <h3 className="text-slate-400 text-[10px] font-black tracking-widest mb-3 border-b border-slate-800 pb-1 flex items-center justify-between">
+                    REGIÕES
+                    {regionFilters.length > 0 && (
+                      <span className="text-sky-400">
+                        {regionFilters.length} SELECTED
+                      </span>
+                    )}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.keys(REGIONS).map((region) => {
+                      const isActive = regionFilters.includes(region);
+                      return (
+                        <button
+                          key={region}
+                          onClick={() => toggleFilter(setRegionFilters, region)}
+                          className={`px-3 py-1.5 rounded-sm border-l-4 text-[10px] uppercase font-bold shadow-sm transition-all active:scale-95 ${
+                            isActive
+                              ? "bg-sky-600 border-sky-300 text-white shadow-[0_0_10px_rgba(2,132,199,0.5)]"
+                              : "bg-slate-800 border-slate-500 text-slate-400 hover:bg-slate-700"
+                          }`}
+                        >
+                          {region}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-slate-400 text-[10px] font-black tracking-widest mb-3 border-b border-slate-800 pb-1 flex items-center justify-between">
+                    JOGOS CLÁSSICOS
+                    {gameFilters.length > 0 && (
+                      <span className="text-sky-400">
+                        {gameFilters.length} SELECTED
+                      </span>
+                    )}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      "red",
+                      "blue",
+                      "yellow",
+                      "gold",
+                      "silver",
+                      "crystal",
+                      "ruby",
+                      "sapphire",
+                      "emerald",
+                      "diamond",
+                      "pearl",
+                    ].map((game) => {
+                      const isActive = gameFilters.includes(game);
+                      const baseColor = VERSION_COLORS[game] || "#94a3b8";
+                      return (
+                        <button
+                          key={game}
+                          onClick={() => toggleFilter(setGameFilters, game)}
+                          className={`px-3 py-1.5 rounded-t-md rounded-b-sm border-t border-l border-b-2 border-r-2 text-[10px] uppercase font-black transition-all hover:-translate-y-0.5 active:scale-95 ${
+                            isActive
+                              ? "text-white border-white/40 shadow-[0_4px_10px_rgba(0,0,0,0.6)]"
+                              : "text-white/60 border-black/40 bg-slate-800 hover:text-white"
+                          }`}
+                          style={{
+                            backgroundColor: isActive ? baseColor : undefined,
+                          }}
+                        >
+                          {game}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 pb-2 -mt-1">
-        {visiblePokemons.map((pokemon) => {
+        {visiblePokemons.map((pokemon, i) => {
           const urlParts = pokemon.url.split("/");
           const id = urlParts[urlParts.length - 2];
           return (
-            <PokemonCard
+            <motion.div
               key={pokemon.name}
-              name={pokemon.name}
-              id={id}
-              isCaught={caughtIds.includes(id)}
-              onToggleCatch={() => toggleCatch(id)}
-            />
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "50px" }}
+              transition={{ duration: 0.3 }}
+            >
+              <PokemonCard
+                name={pokemon.name}
+                id={id}
+                isCaught={caughtIds.includes(id)}
+                onToggleCatch={() => toggleCatch(id)}
+              />
+            </motion.div>
           );
         })}
       </div>
@@ -533,9 +571,13 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
       )}
 
       {filteredPokemons.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-40 text-slate-500 font-mono text-xs">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center justify-center h-40 text-slate-500 font-mono text-xs"
+        >
           <p>NENHUM POKÉMON ENCONTRADO</p>
-        </div>
+        </motion.div>
       )}
     </div>
   );
