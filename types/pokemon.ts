@@ -20,6 +20,10 @@ export interface PokemonDetail {
   stats: PokemonStat[];
   abilities: PokemonAbility[];
   game_indices: PokemonGameIndex[];
+  cries: {
+    latest: string;
+    legacy: string;
+  };
 }
 
 export interface PokemonType {
@@ -31,6 +35,7 @@ export interface PokemonSprites {
   other: {
     "official-artwork": {
       front_default: string;
+      front_shiny: string;
     };
   };
 }
@@ -50,6 +55,10 @@ export interface PokemonAbility {
 export interface PokemonSpecies {
   evolution_chain: { url: string };
   varieties: { is_default: boolean; pokemon: NamedAPIResource }[];
+  flavor_text_entries: {
+    flavor_text: string;
+    language: NamedAPIResource;
+  }[];
 }
 
 export interface EvolutionChain {

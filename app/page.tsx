@@ -3,7 +3,7 @@ import {
   getPokemonList,
   getPokemonDetail,
   getPokemonSpecies,
-  getEvolutionChain,
+  getEvolutionChainWithIds,
 } from "../lib/api";
 import { PokemonDetails } from "../components/PokemonDetails";
 import { PokemonSearchList } from "../components/PokemonSearchList";
@@ -17,13 +17,17 @@ export default async function Home({
   const data = await getPokemonList(1000, 0);
 
   let selectedPokemon = null;
-  let evolutionData = null;
   let speciesData = null;
+  let evolutionListWithIds = null;
 
   if (params.id) {
-    selectedPokemon = await getPokemonDetail(params.id);
-    speciesData = await getPokemonSpecies(params.id);
-    evolutionData = await getEvolutionChain(speciesData.evolution_chain.url);
+    try {
+      selectedPokemon = await getPokemonDetail(params.id);
+      speciesData = await getPokemonSpecies(params.id);
+      evolutionListWithIds = await getEvolutionChainWithIds(
+        selectedPokemon.species.url
+      );
+    } catch (error) {}
   }
 
   return (
@@ -33,8 +37,8 @@ export default async function Home({
           selectedPokemon ? (
             <PokemonDetails
               data={selectedPokemon}
-              evolution={evolutionData}
               species={speciesData}
+              evolutionListWithIds={evolutionListWithIds}
             />
           ) : undefined
         }
