@@ -66,6 +66,18 @@ const VERSION_COLORS: Record<string, string> = {
   violet: "#6D28D9",
 };
 
+const REGION_COLORS: Record<string, string> = {
+  kanto: "#EF4444",
+  johto: "#10B981",
+  hoenn: "#3B82F6",
+  sinnoh: "#64748B",
+  unova: "#1E293B",
+  kalos: "#EC4899",
+  alola: "#F59E0B",
+  galar: "#8B5CF6",
+  paldea: "#06B6D4",
+};
+
 const REGIONS: Record<string, [number, number]> = {
   kanto: [1, 151],
   johto: [152, 251],
@@ -356,7 +368,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="flex gap-2 px-1 flex-wrap font-mono text-[10px]"
+                className="flex gap-2 flex-wrap font-mono text-[10px]"
               >
                 {typeFilters.map((t) => (
                   <motion.button
@@ -365,15 +377,16 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     onClick={() => toggleFilter(setTypeFilters, t)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-600 text-white hover:bg-red-500 hover:border-red-400 transition-colors shadow-sm"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border-2 text-white shadow-md hover:brightness-110 transition-all"
+                    style={{
+                      backgroundColor: TYPE_COLORS[t],
+                      borderColor: TYPE_COLORS[t],
+                    }}
                   >
-                    <span
-                      className="uppercase font-black"
-                      style={{ color: TYPE_COLORS[t] }}
-                    >
+                    <span className="uppercase font-black drop-shadow-sm">
                       {t}
                     </span>
-                    <span className="text-white/50">✕</span>
+                    <span className="text-white/60">✕</span>
                   </motion.button>
                 ))}
                 {regionFilters.map((r) => (
@@ -383,12 +396,16 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     onClick={() => toggleFilter(setRegionFilters, r)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-slate-800 border-l-2 border-sky-400 text-white hover:bg-red-500 hover:border-red-400 hover:border-l-red-200 transition-colors shadow-sm"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-tl-lg rounded-br-lg rounded-tr-sm rounded-bl-sm border-2 text-white shadow-md hover:brightness-110 transition-all"
+                    style={{
+                      backgroundColor: REGION_COLORS[r],
+                      borderColor: REGION_COLORS[r],
+                    }}
                   >
-                    <span className="uppercase font-bold text-slate-200">
+                    <span className="uppercase font-black drop-shadow-sm tracking-wider">
                       {r}
                     </span>
-                    <span className="text-white/50">✕</span>
+                    <span className="text-white/60">✕</span>
                   </motion.button>
                 ))}
                 {gameFilters.map((g) => (
@@ -398,15 +415,17 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     onClick={() => toggleFilter(setGameFilters, g)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-600 text-white hover:bg-red-500 hover:border-red-400 transition-colors shadow-sm"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-t-md rounded-b-sm border-t-2 border-l-2 border-b-4 border-r-4 border-black/40 text-white shadow-md hover:brightness-110 transition-all"
+                    style={{
+                      backgroundColor: VERSION_COLORS[g] || "#4ade80",
+                      borderTopColor: "rgba(255,255,255,0.3)",
+                      borderLeftColor: "rgba(255,255,255,0.3)",
+                    }}
                   >
-                    <span
-                      className="uppercase font-bold"
-                      style={{ color: VERSION_COLORS[g] || "#4ade80" }}
-                    >
+                    <span className="uppercase font-black drop-shadow-md">
                       {g.replace(/-/g, " ")}
                     </span>
-                    <span className="text-white/50">✕</span>
+                    <span className="text-white/80">✕</span>
                   </motion.button>
                 ))}
               </motion.div>
@@ -420,7 +439,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -15, scale: 0.98 }}
                 transition={{ type: "spring", bounce: 0.3 }}
-                className="absolute top-[52px] left-0 w-full bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-4 flex flex-col gap-5 font-mono z-50 max-h-80 overflow-y-auto custom-scrollbar"
+                className="absolute top-[52px] left-0 w-full bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-4 flex flex-col gap-6 font-mono z-50 max-h-[400px] overflow-y-auto custom-scrollbar"
               >
                 <div>
                   <h3 className="text-slate-400 text-[10px] font-black tracking-widest mb-3 border-b border-slate-800 pb-1 flex items-center justify-between">
@@ -438,18 +457,21 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                         <button
                           key={type}
                           onClick={() => toggleFilter(setTypeFilters, type)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] uppercase font-black transition-all hover:scale-105 active:scale-95 ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-[10px] uppercase font-black transition-all hover:scale-105 active:scale-95 ${
                             isActive
-                              ? "shadow-[0_0_10px_rgba(255,255,255,0.4)] text-white"
-                              : "text-white/80 opacity-60 hover:opacity-100"
+                              ? "text-white shadow-[0_0_12px_var(--tw-shadow-color)]"
+                              : "bg-transparent text-white/50 hover:text-white/90"
                           }`}
-                          style={{
-                            backgroundColor: isActive
-                              ? TYPE_COLORS[type]
-                              : "transparent",
-                            borderColor: TYPE_COLORS[type],
-                            color: isActive ? "#fff" : TYPE_COLORS[type],
-                          }}
+                          style={
+                            {
+                              backgroundColor: isActive
+                                ? TYPE_COLORS[type]
+                                : "transparent",
+                              borderColor: TYPE_COLORS[type],
+                              color: isActive ? "#fff" : TYPE_COLORS[type],
+                              "--tw-shadow-color": TYPE_COLORS[type],
+                            } as React.CSSProperties
+                          }
                         >
                           <TypeIcon type={type} />
                           {type}
@@ -475,11 +497,21 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                         <button
                           key={region}
                           onClick={() => toggleFilter(setRegionFilters, region)}
-                          className={`px-3 py-1.5 rounded-sm border-l-4 text-[10px] uppercase font-bold shadow-sm transition-all active:scale-95 ${
+                          className={`px-3 py-1.5 text-[10px] uppercase font-black tracking-widest transition-all active:scale-95 border-2 rounded-tl-xl rounded-br-xl rounded-tr-sm rounded-bl-sm ${
                             isActive
-                              ? "bg-sky-600 border-sky-300 text-white shadow-[0_0_10px_rgba(2,132,199,0.5)]"
-                              : "bg-slate-800 border-slate-500 text-slate-400 hover:bg-slate-700"
+                              ? "text-white shadow-[0_0_12px_var(--tw-shadow-color)]"
+                              : "bg-transparent"
                           }`}
+                          style={
+                            {
+                              backgroundColor: isActive
+                                ? REGION_COLORS[region]
+                                : "transparent",
+                              borderColor: REGION_COLORS[region],
+                              color: isActive ? "#fff" : REGION_COLORS[region],
+                              "--tw-shadow-color": REGION_COLORS[region],
+                            } as React.CSSProperties
+                          }
                         >
                           {region}
                         </button>
@@ -516,17 +548,29 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                       return (
                         <button
                           key={game}
-                          onClick={() => toggleFilter(setGameFilters, game)}
-                          className={`px-3 py-1.5 rounded-t-md rounded-b-sm border-t border-l border-b-2 border-r-2 text-[10px] uppercase font-black transition-all hover:-translate-y-0.5 active:scale-95 ${
+                          onClick={() => toggleFilter(gameFilters, game)}
+                          className={`px-3 py-1.5 text-[10px] uppercase font-black transition-all active:scale-95 rounded-t-md rounded-b-sm border-2 border-b-4 border-r-4 ${
                             isActive
-                              ? "text-white border-white/40 shadow-[0_4px_10px_rgba(0,0,0,0.6)]"
-                              : "text-white/60 border-black/40 bg-slate-800 hover:text-white"
+                              ? "text-white shadow-[0_4px_10px_rgba(0,0,0,0.6)]"
+                              : "bg-transparent"
                           }`}
                           style={{
-                            backgroundColor: isActive ? baseColor : undefined,
+                            backgroundColor: isActive
+                              ? baseColor
+                              : "transparent",
+                            borderColor: isActive
+                              ? "rgba(0,0,0,0.3)"
+                              : baseColor,
+                            color: isActive ? "#fff" : baseColor,
+                            borderTopColor: isActive
+                              ? "rgba(255,255,255,0.3)"
+                              : baseColor,
+                            borderLeftColor: isActive
+                              ? "rgba(255,255,255,0.3)"
+                              : baseColor,
                           }}
                         >
-                          {game}
+                          {game.replace(/-/g, " ")}
                         </button>
                       );
                     })}
