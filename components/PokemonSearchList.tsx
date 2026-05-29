@@ -128,6 +128,53 @@ const GAME_REGIONS: Record<string, string> = {
   violet: "paldea",
 };
 
+const playSfx = (type: "hover" | "click" | "catch" | "error") => {
+  const AudioContext =
+    window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContext) return;
+  const ctx = new AudioContext();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  const now = ctx.currentTime;
+
+  if (type === "hover") {
+    osc.type = "square";
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+    gain.gain.setValueAtTime(0.02, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  } else if (type === "click") {
+    osc.type = "square";
+    osc.frequency.setValueAtTime(400, now);
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.start(now);
+    osc.stop(now + 0.1);
+  } else if (type === "catch") {
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.setValueAtTime(554, now + 0.1);
+    osc.frequency.setValueAtTime(659, now + 0.2);
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.linearRampToValueAtTime(0, now + 0.4);
+    osc.start(now);
+    osc.stop(now + 0.4);
+  } else if (type === "error") {
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(150, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  }
+};
+
 const TypeIcon = ({ type }: { type: string }) => {
   const paths: Record<string, string> = {
     normal:
@@ -194,6 +241,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
 
     const handleApplyFilter = (e: any) => {
       const { type, value } = e.detail;
+      playSfx("click");
       if (type === "type" && !typeFilters.includes(value))
         setTypeFilters((prev) => [...prev, value]);
       if (type === "region" && !regionFilters.includes(value))
@@ -246,10 +294,14 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
     setCaughtIds((prev) => {
       const isCaught = prev.includes(id);
       if (!isCaught && prev.length >= 6) {
+        playSfx("error");
         setShowFullError(true);
         setTimeout(() => setShowFullError(false), 2500);
         return prev;
       }
+      if (!isCaught) playSfx("catch");
+      else playSfx("click");
+
       const next = isCaught ? prev.filter((p) => p !== id) : [...prev, id];
       localStorage.setItem("caughtPokemons", JSON.stringify(next));
       window.dispatchEvent(new Event("catch-update"));
@@ -261,6 +313,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
     setFilterStr: React.Dispatch<React.SetStateAction<string[]>>,
     val: string
   ) => {
+    playSfx("click");
     setFilterStr((prev) =>
       prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
     );
@@ -341,21 +394,8 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
         scale: 1,
       }}
       transition={{ duration: 0.8, ease: "circOut" }}
-      className="flex flex-col w-full relative min-h-full"
+      className="flex flex-col w-full relative h-full overflow-y-auto custom-scrollbar p-8 transition-all duration-700 ease-in-out"
     >
-      <div className="pointer-events-none sticky top-0 w-full h-0 z-[100]">
-        <div className="absolute top-0 left-0 w-full h-[100dvh] overflow-hidden rounded-lg">
-          <motion.div
-            animate={{ backgroundPosition: ["0px 0px", "0px 4px"] }}
-            transition={{ repeat: Infinity, duration: 0.2, ease: "linear" }}
-            className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-30"
-          />
-          <div className="absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)]"></div>
-          <div className="absolute top-[-10%] left-[-20%] w-[140%] h-[50%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0)_70%)] transform -rotate-12 rounded-[100%]"></div>
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/10 to-transparent"></div>
-        </div>
-      </div>
-
       <AnimatePresence>
         {showFullError && (
           <motion.div
@@ -379,7 +419,10 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-40"
-            onClick={() => setIsFilterOpen(false)}
+            onClick={() => {
+              playSfx("click");
+              setIsFilterOpen(false);
+            }}
           />
         )}
       </AnimatePresence>
@@ -393,7 +436,10 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                 placeholder="Buscar Pokémon..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                onFocus={() => setIsFilterOpen(true)}
+                onFocus={() => {
+                  if (!isFilterOpen) playSfx("click");
+                  setIsFilterOpen(true);
+                }}
                 className="w-full bg-slate-900/80 backdrop-blur-xl border border-slate-600/50 text-slate-100 px-4 py-3 rounded-xl focus:outline-none focus:border-sky-400 font-mono text-xs shadow-[0_8px_30px_rgba(0,0,0,0.6)] placeholder-slate-400 transition-all"
               />
               <svg
@@ -406,8 +452,12 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
             </div>
 
             <motion.button
+              onMouseEnter={() => playSfx("hover")}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowCaughtOnly(!showCaughtOnly)}
+              onClick={() => {
+                playSfx("click");
+                setShowCaughtOnly(!showCaughtOnly);
+              }}
               className={`shrink-0 px-4 rounded-xl border flex items-center justify-center transition-all ${
                 showCaughtOnly
                   ? "bg-red-500 border-red-400 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]"
@@ -432,12 +482,13 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
               >
                 {typeFilters.map((t) => (
                   <motion.button
+                    onMouseEnter={() => playSfx("hover")}
                     key={`active-type-${t}`}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     onClick={() => toggleFilter(setTypeFilters, t)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-white shadow-md hover:brightness-110 transition-all"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border-2 text-white shadow-md hover:brightness-110 transition-all"
                     style={{
                       backgroundColor: TYPE_COLORS[t],
                       borderColor: TYPE_COLORS[t],
@@ -451,6 +502,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                 ))}
                 {regionFilters.map((r) => (
                   <motion.button
+                    onMouseEnter={() => playSfx("hover")}
                     key={`active-region-${r}`}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -466,6 +518,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                 ))}
                 {gameFilters.map((g) => (
                   <motion.button
+                    onMouseEnter={() => playSfx("hover")}
                     key={`active-game-${g}`}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -511,6 +564,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                       const isActive = typeFilters.includes(type);
                       return (
                         <button
+                          onMouseEnter={() => playSfx("hover")}
                           key={type}
                           onClick={() => toggleFilter(setTypeFilters, type)}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-[10px] uppercase font-black transition-all hover:scale-105 active:scale-95 ${
@@ -551,6 +605,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                       const isActive = regionFilters.includes(region);
                       return (
                         <button
+                          onMouseEnter={() => playSfx("hover")}
                           key={region}
                           onClick={() => toggleFilter(setRegionFilters, region)}
                           className={`px-3 py-1.5 text-[10px] uppercase font-black tracking-widest transition-all active:scale-95 border-2 rounded-tl-xl rounded-br-xl rounded-tr-sm rounded-bl-sm ${
@@ -603,6 +658,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                       const baseColor = VERSION_COLORS[game] || "#94a3b8";
                       return (
                         <button
+                          onMouseEnter={() => playSfx("hover")}
                           key={game}
                           onClick={() => toggleFilter(setGameFilters, game)}
                           className={`px-3 py-1.5 text-[10px] uppercase font-black transition-all active:scale-95 rounded-t-md rounded-b-sm border-2 border-b-4 border-r-4 ${
@@ -649,6 +705,8 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "50px" }}
               transition={{ duration: 0.3 }}
+              onMouseEnter={() => playSfx("hover")}
+              onClick={() => playSfx("click")}
             >
               <PokemonCard
                 name={pokemon.name}

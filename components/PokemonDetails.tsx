@@ -7,7 +7,9 @@ import { PokemonDetail, PokemonSpecies } from "../types/pokemon";
 interface PokemonDetailsProps {
   data: PokemonDetail;
   species: PokemonSpecies | null;
-  evolutionListWithIds: { name: string; id: string }[] | null;
+  evolutionListWithIds:
+    | { name: string; id: string; evoDetails: string | null }[]
+    | null;
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -67,6 +69,53 @@ const VERSION_COLORS: Record<string, string> = {
   "legends-arceus": "#0F172A",
   scarlet: "#EA580C",
   violet: "#6D28D9",
+};
+
+const playSfx = (type: "hover" | "click" | "catch" | "error") => {
+  const AudioContext =
+    window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContext) return;
+  const ctx = new AudioContext();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  const now = ctx.currentTime;
+
+  if (type === "hover") {
+    osc.type = "square";
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+    gain.gain.setValueAtTime(0.02, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  } else if (type === "click") {
+    osc.type = "square";
+    osc.frequency.setValueAtTime(400, now);
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.start(now);
+    osc.stop(now + 0.1);
+  } else if (type === "catch") {
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.setValueAtTime(554, now + 0.1);
+    osc.frequency.setValueAtTime(659, now + 0.2);
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.linearRampToValueAtTime(0, now + 0.4);
+    osc.start(now);
+    osc.stop(now + 0.4);
+  } else if (type === "error") {
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(150, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  }
 };
 
 const TypeIcon = ({ type }: { type: string }) => {
@@ -168,6 +217,7 @@ export function PokemonDetails({
   };
 
   const removePartyMember = (removeId: string) => {
+    playSfx("click");
     const saved = localStorage.getItem("caughtPokemons");
     if (saved) {
       const list = JSON.parse(saved);
@@ -187,6 +237,7 @@ export function PokemonDetails({
   };
 
   const applyFilter = (filterType: string, value: string) => {
+    playSfx("click");
     window.dispatchEvent(
       new CustomEvent("apply-filter", { detail: { type: filterType, value } })
     );
@@ -201,19 +252,8 @@ export function PokemonDetails({
       animate={{ opacity: 1, x: 0, filter: "brightness(1) contrast(1)" }}
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
       key={data.id}
-      className="relative w-full flex flex-col text-slate-100 font-mono min-h-full"
+      className="relative w-full flex flex-col text-slate-100 font-mono h-full overflow-y-auto custom-scrollbar p-8"
     >
-      <div className="pointer-events-none absolute inset-0 z-[100] overflow-hidden rounded-lg">
-        <motion.div
-          animate={{ backgroundPosition: ["0px 0px", "0px 4px"] }}
-          transition={{ repeat: Infinity, duration: 0.2, ease: "linear" }}
-          className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-30 mix-blend-overlay"
-        />
-        <div className="absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)]"></div>
-        <div className="absolute top-[-10%] left-[-20%] w-[140%] h-[50%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0)_70%)] transform -rotate-12 rounded-[100%]"></div>
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/10 to-transparent"></div>
-      </div>
-
       <div className="relative w-full h-48 shrink-0 border-b border-slate-800 bg-[url('/battle-bg.png')] bg-cover bg-center bg-no-repeat bg-sky-900 rounded-t-lg shadow-inner overflow-hidden z-10">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
@@ -249,8 +289,12 @@ export function PokemonDetails({
                 {data.name}
               </h2>
               <motion.button
+                onMouseEnter={() => playSfx("hover")}
                 whileTap={{ scale: 0.9 }}
-                onClick={playCry}
+                onClick={() => {
+                  playSfx("click");
+                  playCry();
+                }}
                 className="w-7 h-7 flex items-center justify-center bg-sky-500 rounded-full border border-sky-300 shadow-[0_2px_0_#0284c7] hover:bg-sky-400 group ml-1"
                 title="Play Cry"
               >
@@ -263,8 +307,12 @@ export function PokemonDetails({
                 </svg>
               </motion.button>
               <motion.button
+                onMouseEnter={() => playSfx("hover")}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsShiny(!isShiny)}
+                onClick={() => {
+                  playSfx("click");
+                  setIsShiny(!isShiny);
+                }}
                 className={`w-7 h-7 flex items-center justify-center rounded-full border shadow-[0_2px_0_rgba(0,0,0,0.3)] transition-all group ${
                   isShiny
                     ? "bg-yellow-400 border-yellow-200 shadow-[0_2px_0_#ca8a04] hover:bg-yellow-300"
@@ -311,6 +359,7 @@ export function PokemonDetails({
           <div className="flex gap-1.5 flex-wrap justify-end">
             {data.types.map((t) => (
               <motion.div
+                onMouseEnter={() => playSfx("hover")}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 key={t.type.name}
@@ -362,14 +411,14 @@ export function PokemonDetails({
             <h3 className="text-slate-400 font-bold text-xs mb-3 flex items-center gap-2 tracking-widest">
               EVOLUTION LINE
             </h3>
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+            <div className="flex items-center gap-1 overflow-x-auto pb-4 custom-scrollbar px-1">
               {evolutionListWithIds.map((pokemon, i) => {
                 const gifUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${pokemon.id}.gif`;
 
                 return (
                   <div
                     key={pokemon.name}
-                    className="flex items-center gap-2 shrink-0"
+                    className="flex items-center shrink-0"
                   >
                     {pokemon.name === data.name ? (
                       <div
@@ -390,6 +439,8 @@ export function PokemonDetails({
                     ) : (
                       <Link
                         href={`/?id=${pokemon.name}`}
+                        onMouseEnter={() => playSfx("hover")}
+                        onClick={() => playSfx("click")}
                         className="px-2 py-1 rounded-lg text-xs capitalize font-bold border shadow-sm flex items-center gap-2 bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer"
                       >
                         <img
@@ -405,8 +456,18 @@ export function PokemonDetails({
                         </div>
                       </Link>
                     )}
+
                     {i < evolutionListWithIds.length - 1 && (
-                      <span className="text-slate-500 text-xs">▶</span>
+                      <div className="flex flex-col items-center justify-center min-w-[50px] mx-1">
+                        <span className="text-slate-500 text-[10px] mb-0.5">
+                          ▶
+                        </span>
+                        {evolutionListWithIds[i + 1].evoDetails && (
+                          <span className="text-[7px] text-sky-300 font-bold bg-sky-900/40 border border-sky-700/50 px-1.5 py-0.5 rounded shadow-sm text-center uppercase whitespace-nowrap">
+                            {evolutionListWithIds[i + 1].evoDetails}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
@@ -473,6 +534,7 @@ export function PokemonDetails({
                 const baseColor = VERSION_COLORS[g.version.name] || "#94a3b8";
                 return (
                   <motion.div
+                    onMouseEnter={() => playSfx("hover")}
                     whileHover={{ scale: 1.05, y: -5 }}
                     whileTap={{ scale: 0.95 }}
                     key={g.version.name}
@@ -543,6 +605,7 @@ export function PokemonDetails({
               const id = caughtTeam[index];
               return (
                 <motion.div
+                  onMouseEnter={() => playSfx("hover")}
                   key={`party-${index}-${id || "empty"}`}
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
