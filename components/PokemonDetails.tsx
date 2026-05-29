@@ -117,6 +117,7 @@ export function PokemonDetails({
 }: PokemonDetailsProps) {
   const [isShiny, setIsShiny] = useState(false);
   const [isCaught, setIsCaught] = useState(false);
+  const [caughtTeam, setCaughtTeam] = useState<string[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const defaultImageUrl = data.sprites.other["official-artwork"].front_default;
@@ -142,8 +143,10 @@ export function PokemonDetails({
       if (saved) {
         const caughtList = JSON.parse(saved);
         setIsCaught(caughtList.includes(String(data.id)));
+        setCaughtTeam(caughtList.slice(0, 6));
       } else {
         setIsCaught(false);
+        setCaughtTeam([]);
       }
     };
 
@@ -161,6 +164,16 @@ export function PokemonDetails({
       const audio = new Audio(data.cries.latest);
       audio.volume = 0.3;
       audio.play().catch(() => {});
+    }
+  };
+
+  const removePartyMember = (removeId: string) => {
+    const saved = localStorage.getItem("caughtPokemons");
+    if (saved) {
+      const list = JSON.parse(saved);
+      const next = list.filter((p: string) => p !== removeId);
+      localStorage.setItem("caughtPokemons", JSON.stringify(next));
+      window.dispatchEvent(new Event("catch-update"));
     }
   };
 
@@ -184,13 +197,24 @@ export function PokemonDetails({
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, x: 20, filter: "brightness(2) contrast(1.5)" }}
+      animate={{ opacity: 1, x: 0, filter: "brightness(1) contrast(1)" }}
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
       key={data.id}
-      className="w-full flex flex-col text-slate-100 font-mono"
+      className="relative w-full flex flex-col text-slate-100 font-mono min-h-full"
     >
-      <div className="relative w-full h-48 shrink-0 border-b border-slate-800 bg-[url('/battle-bg.png')] bg-cover bg-center bg-no-repeat bg-sky-900 rounded-lg shadow-inner overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 z-[100] overflow-hidden rounded-lg">
+        <motion.div
+          animate={{ backgroundPosition: ["0px 0px", "0px 4px"] }}
+          transition={{ repeat: Infinity, duration: 0.2, ease: "linear" }}
+          className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-30 mix-blend-overlay"
+        />
+        <div className="absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)]"></div>
+        <div className="absolute top-[-10%] left-[-20%] w-[140%] h-[50%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0)_70%)] transform -rotate-12 rounded-[100%]"></div>
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/10 to-transparent"></div>
+      </div>
+
+      <div className="relative w-full h-48 shrink-0 border-b border-slate-800 bg-[url('/battle-bg.png')] bg-cover bg-center bg-no-repeat bg-sky-900 rounded-t-lg shadow-inner overflow-hidden z-10">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
           <motion.img
@@ -209,7 +233,7 @@ export function PokemonDetails({
         </div>
       </div>
 
-      <div className="flex flex-col p-5 w-full bg-slate-900/90 rounded-b-lg relative overflow-hidden">
+      <div className="flex flex-col p-5 w-full bg-slate-900/90 rounded-b-lg relative overflow-hidden z-10 flex-grow">
         <svg
           className="absolute top-10 -right-20 w-80 h-80 text-white/5 pointer-events-none z-0"
           fill="currentColor"
@@ -497,6 +521,61 @@ export function PokemonDetails({
             </div>
           </div>
         )}
+
+        <div className="mb-2 relative z-10 pt-5 border-t border-slate-700/50">
+          <div className="flex justify-between items-end mb-3">
+            <h3 className="text-slate-400 font-bold text-xs tracking-widest flex items-center gap-2">
+              <svg
+                className="w-3.5 h-3.5 text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 2c4.08 0 7.45 3.05 7.94 7h-4.06c-.44-1.73-2.01-3-3.88-3s-3.44 1.27-3.88 3H4.06C4.55 7.05 7.92 4 12 4zm0 16c-4.08 0-7.45-3.05-7.94-7h4.06c.44 1.73 2.01 3 3.88 3s3.44-1.27 3.88-3h4.06c-.49 3.95-3.86 7-7.94 7zm0-10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+              </svg>
+              MY PARTY
+            </h3>
+            <span className="text-[10px] font-bold text-slate-500">
+              {caughtTeam.length} / 6
+            </span>
+          </div>
+          <div className="grid grid-cols-6 gap-2">
+            {[0, 1, 2, 3, 4, 5].map((index) => {
+              const id = caughtTeam[index];
+              return (
+                <motion.div
+                  key={`party-${index}-${id || "empty"}`}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`aspect-square rounded-md border-2 flex items-center justify-center relative overflow-hidden transition-all ${
+                    id
+                      ? "bg-slate-800 border-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.4)] cursor-pointer hover:bg-red-900/40 hover:border-red-500 group"
+                      : "bg-slate-900/50 border-slate-700/50 border-dashed"
+                  }`}
+                  onClick={() => id && removePartyMember(id)}
+                  title={id ? "Click to remove from party" : "Empty slot"}
+                >
+                  {id ? (
+                    <>
+                      <motion.img
+                        whileHover={{ scale: 1.15, rotate: [-5, 5, -5, 0] }}
+                        src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`}
+                        className="w-[140%] h-[140%] object-contain drop-shadow-md group-hover:opacity-30 transition-opacity"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-red-500 font-bold text-lg">
+                          ×
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </motion.div>
   );

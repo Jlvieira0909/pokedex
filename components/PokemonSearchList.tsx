@@ -175,6 +175,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
   const [caughtIds, setCaughtIds] = useState<string[]>([]);
   const [showCaughtOnly, setShowCaughtOnly] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showFullError, setShowFullError] = useState(false);
 
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [regionFilters, setRegionFilters] = useState<string[]>([]);
@@ -203,8 +204,21 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
+    const handleCatchUpdate = () => {
+      const updated = localStorage.getItem("caughtPokemons");
+      if (updated) {
+        try {
+          setCaughtIds(JSON.parse(updated));
+        } catch (e) {}
+      }
+    };
+
     window.addEventListener("apply-filter", handleApplyFilter);
-    return () => window.removeEventListener("apply-filter", handleApplyFilter);
+    window.addEventListener("catch-update", handleCatchUpdate);
+    return () => {
+      window.removeEventListener("apply-filter", handleApplyFilter);
+      window.removeEventListener("catch-update", handleCatchUpdate);
+    };
   }, [typeFilters, regionFilters, gameFilters]);
 
   useEffect(() => {
@@ -230,9 +244,13 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
 
   const toggleCatch = (id: string) => {
     setCaughtIds((prev) => {
-      const next = prev.includes(id)
-        ? prev.filter((p) => p !== id)
-        : [...prev, id];
+      const isCaught = prev.includes(id);
+      if (!isCaught && prev.length >= 6) {
+        setShowFullError(true);
+        setTimeout(() => setShowFullError(false), 2500);
+        return prev;
+      }
+      const next = isCaught ? prev.filter((p) => p !== id) : [...prev, id];
       localStorage.setItem("caughtPokemons", JSON.stringify(next));
       window.dispatchEvent(new Event("catch-update"));
       return next;
@@ -311,7 +329,49 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
   }, [observerTarget]);
 
   return (
-    <div className="flex flex-col w-full relative">
+    <motion.div
+      initial={{
+        opacity: 0,
+        filter: "brightness(3) contrast(2) blur(2px)",
+        scale: 0.98,
+      }}
+      animate={{
+        opacity: 1,
+        filter: "brightness(1) contrast(1) blur(0px)",
+        scale: 1,
+      }}
+      transition={{ duration: 0.8, ease: "circOut" }}
+      className="flex flex-col w-full relative min-h-full"
+    >
+      <div className="pointer-events-none sticky top-0 w-full h-0 z-[100]">
+        <div className="absolute top-0 left-0 w-full h-[100dvh] overflow-hidden rounded-lg">
+          <motion.div
+            animate={{ backgroundPosition: ["0px 0px", "0px 4px"] }}
+            transition={{ repeat: Infinity, duration: 0.2, ease: "linear" }}
+            className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-30"
+          />
+          <div className="absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)]"></div>
+          <div className="absolute top-[-10%] left-[-20%] w-[140%] h-[50%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0)_70%)] transform -rotate-12 rounded-[100%]"></div>
+          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/10 to-transparent"></div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showFullError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 10, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.8 }}
+            className="absolute top-2 left-1/2 transform -translate-x-1/2 z-[110] bg-red-600 border-2 border-red-300 text-white font-black text-[11px] uppercase px-4 py-2 rounded-full shadow-[0_10px_30px_rgba(220,38,38,0.8)] flex items-center gap-2 tracking-widest pointer-events-none"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+            </svg>
+            Party Is Full (Max 6)
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {isFilterOpen && (
           <motion.div
@@ -377,7 +437,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     onClick={() => toggleFilter(setTypeFilters, t)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border-2 text-white shadow-md hover:brightness-110 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-white shadow-md hover:brightness-110 transition-all"
                     style={{
                       backgroundColor: TYPE_COLORS[t],
                       borderColor: TYPE_COLORS[t],
@@ -396,13 +456,9 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     onClick={() => toggleFilter(setRegionFilters, r)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-tl-lg rounded-br-lg rounded-tr-sm rounded-bl-sm border-2 text-white shadow-md hover:brightness-110 transition-all"
-                    style={{
-                      backgroundColor: REGION_COLORS[r],
-                      borderColor: REGION_COLORS[r],
-                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-tl-lg rounded-br-lg rounded-tr-sm rounded-bl-sm border border-sky-400 bg-gradient-to-r from-sky-700 to-blue-900 text-white shadow-md hover:brightness-110 transition-all"
                   >
-                    <span className="uppercase font-black drop-shadow-sm tracking-wider">
+                    <span className="uppercase font-bold tracking-wider">
                       {r}
                     </span>
                     <span className="text-white/60">✕</span>
@@ -548,7 +604,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
                       return (
                         <button
                           key={game}
-                          onClick={() => toggleFilter(gameFilters, game)}
+                          onClick={() => toggleFilter(setGameFilters, game)}
                           className={`px-3 py-1.5 text-[10px] uppercase font-black transition-all active:scale-95 rounded-t-md rounded-b-sm border-2 border-b-4 border-r-4 ${
                             isActive
                               ? "text-white shadow-[0_4px_10px_rgba(0,0,0,0.6)]"
@@ -582,7 +638,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 pb-2 -mt-1">
+      <div className="grid grid-cols-2 gap-3 pb-2 -mt-1 relative z-10">
         {visiblePokemons.map((pokemon, i) => {
           const urlParts = pokemon.url.split("/");
           const id = urlParts[urlParts.length - 2];
@@ -608,7 +664,7 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
       {visibleCount < filteredPokemons.length && (
         <div
           ref={observerTarget}
-          className="h-10 w-full flex items-center justify-center mt-2"
+          className="h-10 w-full flex items-center justify-center mt-2 relative z-10"
         >
           <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
@@ -618,11 +674,11 @@ export function PokemonSearchList({ pokemons }: PokemonSearchListProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center h-40 text-slate-500 font-mono text-xs"
+          className="flex flex-col items-center justify-center h-40 text-slate-500 font-mono text-xs relative z-10"
         >
           <p>NENHUM POKÉMON ENCONTRADO</p>
         </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
